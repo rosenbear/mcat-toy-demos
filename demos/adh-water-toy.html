@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ADH Water Reabsorption Toy</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #162128;
+      --muted: #62717a;
+      --line: #d6e1e6;
+      --paper: #f8fbf8;
+      --blue: #3174ad;
+      --green: #3a8f65;
+      --amber: #b98221;
+      --shadow: 0 14px 32px rgba(22, 33, 40, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 14% 4%, rgba(58, 143, 101, .13), transparent 28rem), linear-gradient(180deg, var(--paper), #edf5f2);
+      color: var(--ink);
+    }
+
+    button, input { font: inherit; }
+    a { color: inherit; }
+
+    .app {
+      width: min(1080px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 20px 0 38px;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .76);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    header { padding: 18px 0 22px; }
+    h1 { margin: 0; font-size: clamp(2rem, 6vw, 4.4rem); line-height: .96; letter-spacing: 0; }
+    .subhead { margin: 12px 0 0; color: var(--muted); line-height: 1.48; max-width: 760px; }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .86);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .label { display: flex; justify-content: space-between; gap: 10px; font-weight: 800; }
+    .label span:last-child { color: var(--blue); }
+    input[type="range"] { width: 100%; accent-color: var(--blue); margin: 18px 0 8px; }
+    .scale { display: flex; justify-content: space-between; color: var(--muted); font-size: .86rem; }
+
+    .prediction { display: grid; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .prediction p, .note p { margin: 0; color: var(--muted); line-height: 1.45; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    button:hover, button[aria-pressed="true"] { border-color: #28404f; background: #28404f; color: #fff; }
+    .feedback { min-height: 54px; padding: 10px; border-radius: 8px; background: #f5f8f7; color: var(--muted); line-height: 1.35; }
+
+    .system {
+      display: grid;
+      grid-template-columns: minmax(190px, .8fr) minmax(220px, 1fr) minmax(190px, .8fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .zone { min-height: 320px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #fbfdfc; }
+    .zone h2 { margin: 0 0 10px; font-size: 1rem; }
+    .zone p { margin: 0; color: var(--muted); line-height: 1.38; font-size: .94rem; }
+    .duct-wrap { display: grid; place-items: center; min-height: 320px; }
+
+    .duct {
+      position: relative;
+      width: min(220px, 88%);
+      height: 286px;
+      border: 3px solid #263944;
+      border-top: 0;
+      border-radius: 0 0 36px 36px;
+      overflow: hidden;
+      background: linear-gradient(90deg, #fff 0 44%, #f7fbff 44% 56%, #fff 56% 100%);
+    }
+
+    .urine {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--urine-height);
+      background: linear-gradient(180deg, var(--urine-top), var(--urine-bottom));
+      transition: height .22s ease, background .22s ease;
+    }
+
+    .channel {
+      position: absolute;
+      right: 18px;
+      width: 22px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--green);
+      opacity: var(--channel-opacity);
+      transform: scaleX(var(--channel-scale));
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .channel:nth-child(2) { top: 54px; }
+    .channel:nth-child(3) { top: 92px; }
+    .channel:nth-child(4) { top: 130px; }
+    .channel:nth-child(5) { top: 168px; }
+    .channel:nth-child(6) { top: 206px; }
+
+    .drop {
+      position: absolute;
+      right: -34px;
+      width: 12px;
+      height: 18px;
+      border-radius: 10px 10px 10px 2px;
+      background: var(--blue);
+      opacity: var(--drop-opacity);
+      transform: rotate(45deg) translateX(var(--drop-shift));
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .drop:nth-child(7) { top: 70px; }
+    .drop:nth-child(8) { top: 126px; }
+    .drop:nth-child(9) { top: 182px; }
+
+    .metrics { display: grid; gap: 10px; margin-top: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .metric { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .metric span { display: block; color: var(--muted); font-size: .82rem; }
+    .metric strong { display: block; margin-top: 4px; font-size: clamp(1.2rem, 4vw, 1.8rem); }
+    .bar { height: 10px; margin-top: 10px; border-radius: 999px; background: #e8eef1; overflow: hidden; }
+    .bar i { display: block; width: var(--bar-width); height: 100%; border-radius: inherit; background: var(--bar-color); transition: width .22s ease; }
+    .note { display: grid; gap: 10px; margin-top: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+
+    @media (max-width: 860px) {
+      main, .system, .metrics { grid-template-columns: 1fr; }
+      .zone { min-height: auto; }
+      .duct-wrap { min-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <a class="back" href="../index.html">Back to demos</a>
+    <header>
+      <h1>ADH Water Reabsorption Toy</h1>
+      <p class="subhead">Show me how increasing ADH decreases urine volume and increases urine concentration through aquaporin insertion in the collecting duct.</p>
+    </header>
+
+    <main>
+      <section class="panel" aria-label="Controls">
+        <div class="label"><span>ADH level</span><span id="adhValue">50%</span></div>
+        <input id="adhSlider" type="range" min="0" max="100" value="50" aria-label="ADH level">
+        <div class="scale"><span>Low ADH</span><span>High ADH</span></div>
+
+        <div class="prediction">
+          <strong>Predict first</strong>
+          <p>If ADH rises, what should happen to urine volume?</p>
+          <div class="choices">
+            <button type="button" data-answer="increase" aria-pressed="false">Increase</button>
+            <button type="button" data-answer="decrease" aria-pressed="false">Decrease</button>
+          </div>
+          <div id="feedback" class="feedback">Choose an answer, then move the slider to test the mechanism.</div>
+        </div>
+
+        <div class="note">
+          <strong>Model limit</strong>
+          <p>This toy compresses the full nephron and hormone signaling pathway so you can focus on ADH, aquaporins, water reabsorption, urine volume, and urine concentration.</p>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Simulation">
+        <div class="system">
+          <div class="zone"><h2>Blood side</h2><p>Water returns to blood as collecting duct permeability rises.</p></div>
+          <div class="zone duct-wrap">
+            <div id="duct" class="duct" aria-label="Collecting duct visualization">
+              <div class="urine"></div>
+              <i class="channel"></i><i class="channel"></i><i class="channel"></i><i class="channel"></i><i class="channel"></i>
+              <i class="drop"></i><i class="drop"></i><i class="drop"></i>
+            </div>
+          </div>
+          <div class="zone"><h2>Urine side</h2><p>More ADH leaves less water in the filtrate, so the urine becomes smaller in volume and more concentrated.</p></div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric"><span>Aquaporin insertion</span><strong id="aquaporinMetric">50%</strong><div class="bar"><i id="aquaporinBar"></i></div></div>
+          <div class="metric"><span>Urine volume</span><strong id="volumeMetric">55%</strong><div class="bar"><i id="volumeBar"></i></div></div>
+          <div class="metric"><span>Urine concentration</span><strong id="concentrationMetric">50%</strong><div class="bar"><i id="concentrationBar"></i></div></div>
+        </div>
+
+        <div class="note">
+          <strong>Transfer question</strong>
+          <p>A patient is dehydrated and secretes more ADH. Predict the urine change: lower volume, higher concentration.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const slider = document.querySelector('#adhSlider');
+    const adhValue = document.querySelector('#adhValue');
+    const duct = document.querySelector('#duct');
+    const aquaporinMetric = document.querySelector('#aquaporinMetric');
+    const volumeMetric = document.querySelector('#volumeMetric');
+    const concentrationMetric = document.querySelector('#concentrationMetric');
+    const aquaporinBar = document.querySelector('#aquaporinBar');
+    const volumeBar = document.querySelector('#volumeBar');
+    const concentrationBar = document.querySelector('#concentrationBar');
+    const feedback = document.querySelector('#feedback');
+    const choices = [...document.querySelectorAll('[data-answer]')];
+    let selectedAnswer = '';
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function updateToy() {
+      const adh = Number(slider.value);
+      const urineVolume = clamp(95 - adh * .8, 15, 95);
+      const concentration = clamp(12 + adh * .86, 12, 98);
+      const urineHeight = clamp(18 + urineVolume * .68, 24, 84);
+      const channelOpacity = clamp(.18 + adh / 100, .18, 1);
+      const channelScale = clamp(.5 + adh / 80, .5, 1.75);
+      const dropOpacity = clamp(.18 + adh / 105, .18, .96);
+      const amberMix = Math.round(adh * 1.2);
+
+      adhValue.textContent = `${adh}%`;
+      aquaporinMetric.textContent = `${adh}%`;
+      volumeMetric.textContent = `${Math.round(urineVolume)}%`;
+      concentrationMetric.textContent = `${Math.round(concentration)}%`;
+
+      aquaporinBar.style.setProperty('--bar-width', `${adh}%`);
+      aquaporinBar.style.setProperty('--bar-color', 'var(--green)');
+      volumeBar.style.setProperty('--bar-width', `${urineVolume}%`);
+      volumeBar.style.setProperty('--bar-color', 'var(--blue)');
+      concentrationBar.style.setProperty('--bar-width', `${concentration}%`);
+      concentrationBar.style.setProperty('--bar-color', 'var(--amber)');
+
+      duct.style.setProperty('--urine-height', `${urineHeight}%`);
+      duct.style.setProperty('--channel-opacity', channelOpacity);
+      duct.style.setProperty('--channel-scale', channelScale);
+      duct.style.setProperty('--drop-shift', `${Math.round(adh * -0.34)}px`);
+      duct.style.setProperty('--drop-opacity', dropOpacity);
+      duct.style.setProperty('--urine-top', `rgb(156, ${211 - amberMix * .45}, ${255 - amberMix})`);
+      duct.style.setProperty('--urine-bottom', `rgb(${49 + amberMix}, ${116 + amberMix * .2}, ${173 - amberMix})`);
+
+      if (selectedAnswer === 'decrease') {
+        feedback.textContent = 'Correct: higher ADH inserts more aquaporins, so more water leaves the filtrate and urine volume decreases.';
+      } else if (selectedAnswer === 'increase') {
+        feedback.textContent = 'That is the trap: high ADH does not add water to urine. It pulls water back into blood, so urine volume decreases.';
+      }
+    }
+
+    choices.forEach((button) => {
+      button.addEventListener('click', () => {
+        selectedAnswer = button.dataset.answer;
+        choices.forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
+        updateToy();
+      });
+    });
+
+    slider.addEventListener('input', updateToy);
+    updateToy();
+  </script>
+</body>
+</html>
